@@ -1,89 +1,88 @@
-// Инициализация переменных
-let spinning = false;
-let rotation = 0;
-const rotations = 5;
-let students = window.students;
+let isSpinning = false;
+let currentRotation = 0;
 
-// Генерация цветов
-students.forEach((student, index) => {
-    const hue = (index * 360 / students.length) % 360;
-    student.color = `hsl(${hue}, 70%, 50%)`;
-});
+function initWheel() {
+    const wheel = document.getElementById('wheel');
+    wheel.innerHTML = '';
 
-// Инициализация колеса
-const canvas = document.getElementById('wheel');
-const ctx = canvas.getContext('2d');
-const center = canvas.width / 2;
-const radius = canvas.width / 2 - 20;
+    const total = students.reduce((sum, s) => sum + s.exact_probability, 0);
+    let accumulatedAngle = 0;
 
-function drawWheel() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    let startAngle = -Math.PI/2;
+    students.forEach((student, index) => {
+        const segment = document.createElement('div');
+        segment.className = 'segment';
+        const angle = (student.exact_probability / 100) * 360;
 
-    students.forEach(student => {
-        const angle = (student.probability / 100) * 2 * Math.PI;
+        // Основной сегмент
+        segment.style.transform = `rotate(${accumulatedAngle}deg)`;
+        segment.style.backgroundColor = student.wheel_color;
 
-        // Рисуем сегмент
-        ctx.beginPath();
-        ctx.moveTo(center, center);
-        ctx.arc(center, center, radius, startAngle, startAngle + angle);
-        ctx.fillStyle = student.color;
-        ctx.fill();
+        // Точная граница сегмента
+        segment.style.clipPath = index === students.length - 1
+            ? 'polygon(50% 50%, 50% 0, 100% 0, 100% 100%, 50% 100%)'
+            : 'polygon(50% 50%, 50% 0, 100% 0)';
 
         // Текст
-        ctx.save();
-        ctx.translate(center, center);
-        ctx.rotate(startAngle + angle/2);
-        ctx.fillStyle = 'white';
-        ctx.font = '14px Arial';
-        ctx.textAlign = 'right';
-        ctx.fillText(student.name, radius - 10, 5);
-        ctx.restore();
+        const text = document.createElement('div');
+        text.className = 'segment-text';
+        text.textContent = student.name;
+        text.style.transform = `rotate(${angle/2}deg)`;
+        text.style.color = getContrastColor(student.wheel_color);  // Функция контрастного текста
 
-        startAngle += angle;
+        segment.appendChild(text);
+        wheel.appendChild(segment);
+
+        accumulatedAngle += angle;
     });
 }
 
-function getWinnerIndex() {
-    const total = students.reduce((sum, s) => sum + s.probability, 0);
-    const random = Math.random() * total;
-    let cumulative = 0;
-
-    for(let i = 0; i < students.length; i++) {
-        cumulative += students[i].probability;
-        if(random <= cumulative) return i;
-    }
-    return students.length - 1;
+// Функция для определения контрастного цвета текста
+function getContrastColor(hexColor) {
+    const r = parseInt(hexColor.substr(1,2), 16);
+    const g = parseInt(hexColor.substr(3,2), 16);
+    const b = parseInt(hexColor.substr(5,2), 16);
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance > 0.5 ? '#000000' : '#ffffff';
 }
 
-function startSpin() {
-    if(spinning) return;
+async function startSpin() {
+    if (isSpinning) return;
+    isSpinning = true;
+    document.getElementById('spinButton').disabled = true;
+    const resultElement = document.getElementById('result');
+    resultElement.textContent = '';
 
-    const winnerIndex = getWinnerIndex();
-    const segmentAngle = 360 / students.reduce((sum, s) => sum + s.probability, 0) * students[winnerIndex].probability;
-    const targetRotation = rotations * 360 + (360 - (winnerIndex * (360 / students.length) - segmentAngle/2));
+    try {
+        const response = await fetch('/', { method: 'POST' });
+        if (!response.ok) throw new Error('Ошибка сервера');
 
-    spinning = true;
-    document.getElementById('result').textContent = '';
+        const data = await response.json();
+        if (data.error) throw new Error(data.error);
 
-    const animate = () => {
-        rotation += (targetRotation - rotation) * 0.02;
-        canvas.style.transform = `rotate(${rotation}deg)`;
+        animateWheel(data.target_angle);
+        showResult(data.winner);
+    } catch (error) {
+        resultElement.textContent = `Ошибка: ${error.message}`;
+        console.error('Ошибка:', error);
+    } finally {
+        isSpinning = false;
+        document.getElementById('spinButton').disabled = false;
+    }
+}
 
-        if(Math.abs(targetRotation - rotation) < 0.1) {
-            spinning = false;
-            rotation = targetRotation % 360;
-            document.getElementById('result').textContent =
-                `🎉 Победитель: ${students[winnerIndex].name}! 🎉`;
-        } else {
-            requestAnimationFrame(animate);
-        }
-    };
+function animateWheel(targetAngle) {
+    const wheel = document.getElementById('wheel');
+    wheel.style.transition = 'transform 5s cubic-bezier(0.25, 0.1, 0.25, 1)';
+    wheel.style.transform = `rotate(${currentRotation + targetAngle}deg)`;
+    currentRotation = (currentRotation + targetAngle) % 360;
+}
 
-    animate();
+function showResult(winnerName) {
+    const resultElement = document.getElementById('result');
+    setTimeout(() => {
+        resultElement.innerHTML = `🎉 Победитель: ${winnerName}! 🎉`;
+    }, 5000);
 }
 
 // Инициализация при загрузке
-canvas.width = 400;
-canvas.height = 400;
-drawWheel();
+document.addEventListener('DOMContentLoaded', initWheel);

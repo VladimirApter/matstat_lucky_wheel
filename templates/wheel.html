@@ -9,11 +9,11 @@
 
 <div class="wheel-container">
     <div id="pointer"></div>
-    <canvas id="wheel"></canvas>
+    <div id="wheel"></div>
 </div>
 
 <div id="result"></div>
-<button onclick="startSpin()">Крутить колесо! 🎰</button>
+<button onclick="startSpin()" id="spinButton">Крутить колесо! 🎰</button>
 
 <table>
     <thead>
@@ -27,18 +27,27 @@
     <tbody>
     {% for student in students %}
     <tr>
-        <td><div class="student-color" style="background: {{ student.color|safe }}"></div></td>
+        <td>
+            <div class="student-color"
+                 style="background: {{ student.wheel_color }};
+                border-color: {{ student.border_color }};">
+            </div>
+        </td>
         <td>{{ student.name }}</td>
         <td>{{ student.score }}</td>
-        <td>{{ student.probability }}%</td>
+        <td>{{ student.probability|round(2) }}%</td>
     </tr>
     {% endfor %}
     </tbody>
 </table>
 
 <script type="text/javascript">
-    // Передача данных из Jinja в JavaScript
+    // Генерация цветов на клиенте
     const students = {{ students|tojson|safe }};
+    students.forEach((student, index) => {
+        const hue = (index * 360 / students.length) % 360;
+        student.color = `hsl(${hue}, 70%, 50%)`;
+    });
 </script>
 <script src="{{ url_for('static', filename='js/wheel.js') }}"></script>
 </body>

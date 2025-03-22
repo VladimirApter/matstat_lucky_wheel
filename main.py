@@ -1,10 +1,16 @@
 import pandas as pd
 import numpy as np
-from flask import Flask, render_template, request, session
+from flask import Flask, render_template, request, session, jsonify
+from colours import Color
 
 app = Flask(__name__, static_folder='static', static_url_path='/static')
-app.secret_key = 'your_secret_key_here'  # Замените на реальный секретный ключ
+app.secret_key = 'your_secret_key_here'
 
+# После создания экземпляра app
+@app.template_filter('darker')
+def darker_filter(color_hex, amount=0.2):
+    color = Color(hex_code=color_hex)
+    return color.darker(amount).hex
 
 class StudentSelector:
     @staticmethod
@@ -65,21 +71,32 @@ class StudentSelector:
         scores = [s['score'] for s in students]
 
         try:
-            exact_probabilities = cls.calculate_probabilities(scores)
+            probabilities = cls.calculate_probabilities(scores)
         except Exception as e:
             print(f"Ошибка расчета вероятностей: {e}")
-            exact_probabilities = [1 / len(scores)] * len(scores)
+            probabilities = [1 / len(scores)] * len(scores)
 
-        display_probabilities = [round(p * 100, 6) for p in
-                                 exact_probabilities]  # Больше знаков
+        exact_probabilities = [p / sum(probabilities) for p in probabilities]
+        exact_probabilities[-1] += 1.0 - sum(exact_probabilities)
 
-        # Корректируем отображение для точной суммы 100%
+        # Отображаемые вероятности
+        display_probabilities = [round(p * 100, 2) for p in
+                                 exact_probabilities]
+
+        # Корректировка суммы отображения
         sum_display = sum(display_probabilities)
         display_probabilities[-1] += 100 - sum_display
 
         for i, s in enumerate(students):
-            s['probability'] = round(display_probabilities[i],
-                                     2)  # Округляем только для отображения
+            s['exact_probability'] = exact_probabilities[
+                                         i] * 100  # Для расчетов
+            s['probability'] = display_probabilities[i]  # Для отображения
+
+            hue = i * (360 / len(students))
+            color = Color(hsl=(hue, 0.7, 0.5))
+            s['color'] = color.hex
+            s['wheel_color'] = color.hex  # Добавляем отдельное поле для колеса
+            s['border_color'] = color.darker(0.2).hex
 
         return students
 
@@ -94,23 +111,47 @@ class StudentSelector:
 
         return np.random.choice(names, p=normalized)
 
+    @classmethod
+    def calculate_target_angle(cls, students, winner_name):
+        """Рассчитывает угол поворота для анимации колеса"""
+        total_probability = sum(s['probability'] for s in students)
+        accumulated = 0
+        winner_index = 0
+
+        for i, student in enumerate(students):
+            if student['name'] == winner_name:
+                winner_index = i
+                break
+            accumulated += student['probability']
+
+        segment_angle = 360 * (
+                    students[winner_index]['probability'] / total_probability)
+        target_angle = 5 * 360 + (
+                    360 - (accumulated + segment_angle / 2)) % 360
+        return target_angle
+
 
 @app.route('/', methods=['GET', 'POST'])
 def wheel_of_fortune():
-    # Получаем или создаем список студентов
     students = StudentSelector.prepare_students()
 
     if students is None:
-        return "Нет данных о студентах", 500
+        return jsonify(error="Нет данных о студентах"), 500
 
-    # Обработка нажатия кнопки
     if request.method == 'POST':
-        winner = StudentSelector.select_winner(students)
-        session['winner'] = winner
-    else:
-        session.pop('winner', None)  # Сбрасываем победителя при новом заходе
+        try:
+            winner = StudentSelector.select_winner(students)
+            session['winner'] = winner
+            target_angle = StudentSelector.calculate_target_angle(students,
+                                                                  winner)
+            return jsonify({
+                'winner': winner,
+                'target_angle': target_angle,
+                'students': students
+            })
+        except Exception as e:
+            return jsonify(error=str(e)), 500
 
-    # Помечаем победителя в данных
     current_winner = session.get('winner')
     for s in students:
         s['is_winner'] = (s['name'] == current_winner)
