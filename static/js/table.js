@@ -7,13 +7,16 @@ export function populateTable(students, wheel) {
   students.forEach(student => {
     const tr = document.createElement("tr");
 
-    // Цвет сегмента
+    // Проверяем, есть ли студент в колесе (если нет, он исключён)
+    const segment = wheel.segments.find(seg => seg.name === student.name);
+    if (!segment) tr.classList.add("inactive");
+
+    // Цвет сегмента (если студент исключён, серый)
     const colorTd = document.createElement("td");
     const colorBox = document.createElement("div");
     colorBox.style.width = "20px";
     colorBox.style.height = "20px";
-    const segment = wheel.segments.find(seg => seg.name === student.name);
-    colorBox.style.backgroundColor = segment ? segment.color : "#ddd"; // Серый цвет, если студента нет в колесе
+    colorBox.style.backgroundColor = student.color;
     colorTd.appendChild(colorBox);
 
     // Вероятность (если студент отсутствует, показываем 0%)

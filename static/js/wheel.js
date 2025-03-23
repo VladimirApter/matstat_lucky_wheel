@@ -13,7 +13,7 @@ export function setupWheel(students) {
       probability: student.probability,
       startAngle: currentAngle,
       endAngle: currentAngle + angle,
-      color: `hsl(${Math.floor(currentAngle * 180 / Math.PI)}, 70%, 60%)`
+      color: student.color // Используем закреплённый цвет
     };
     currentAngle += angle;
     return segment;

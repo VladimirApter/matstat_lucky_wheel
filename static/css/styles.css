@@ -72,7 +72,12 @@ input[type="checkbox"] {
   cursor: pointer;
 }
 
-/* Стиль для студентов, отсутствующих на паре */
+/* Неактивный студент (отмечен как отсутствующий) */
 tr.inactive {
-  opacity: 0.5;
+  opacity: 0.5; /* Прозрачность */
+  color: #888; /* Серый цвет текста */
+}
+
+tr.inactive td:first-child div {
+  background-color: #ddd !important; /* Серый цвет квадрата */
 }

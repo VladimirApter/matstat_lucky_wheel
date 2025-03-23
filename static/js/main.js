@@ -5,6 +5,11 @@ import { populateTable, getExcludedStudents } from "./table.js";
 
 let wheel;
 
+// Закрепляем цвета за студентами при первой загрузке
+students.forEach((student, idx) => {
+  student.color = `hsl(${(idx * 360) / students.length}, 70%, 60%)`;
+});
+
 document.addEventListener("DOMContentLoaded", function () {
   updateWheel();
   document.getElementById("spinButton").addEventListener("click", () => startSpin(wheel));
