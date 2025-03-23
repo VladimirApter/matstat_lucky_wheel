@@ -1,54 +1,36 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-    <title>MatStat Lucky Wheel</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  <meta charset="UTF-8">
+  <title>Колесо фортуны студентов</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
-<h1>🎡 MatStat Lucky Wheel</h1>
-
-<div class="wheel-container">
-    <div id="pointer"></div>
-    <div id="wheel"></div>
-</div>
-
-<div id="result"></div>
-<button onclick="startSpin()" id="spinButton">Крутить колесо! 🎰</button>
-
-<table>
-    <thead>
-    <tr>
-        <th>Цвет</th>
-        <th>Студент</th>
-        <th>Баллы</th>
-        <th>Шанс</th>
-    </tr>
-    </thead>
-    <tbody>
-    {% for student in students %}
-    <tr>
-        <td>
-            <div class="student-color"
-                 style="background: {{ student.wheel_color }};
-                border-color: {{ student.border_color }};">
-            </div>
-        </td>
-        <td>{{ student.name }}</td>
-        <td>{{ student.score }}</td>
-        <td>{{ student.probability|round(2) }}%</td>
-    </tr>
-    {% endfor %}
-    </tbody>
-</table>
-
-<script type="text/javascript">
-    // Генерация цветов на клиенте
-    const students = {{ students|tojson|safe }};
-    students.forEach((student, index) => {
-        const hue = (index * 360 / students.length) % 360;
-        student.color = `hsl(${hue}, 70%, 50%)`;
-    });
-</script>
-<script src="{{ url_for('static', filename='js/wheel.js') }}"></script>
+  <div class="main-container">
+    <div class="table-container">
+      <h2>Список студентов</h2>
+      <table id="studentsTable">
+        <thead>
+          <tr>
+            <th>Цвет</th>
+            <th>Шанс (%)</th>
+            <th>Имя</th>
+            <th>Нет на паре</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="wheel-container">
+      <h1>Колесо фортуны студентов</h1>
+      <canvas id="wheelCanvas" width="600" height="600"></canvas>
+      <button id="spinButton">Крутить</button>
+      <div id="result"></div>
+    </div>
+  </div>
+  <script>
+    const students = {{ students | tojson | safe }};
+  </script>
+  <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>
