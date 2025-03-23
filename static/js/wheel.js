@@ -17,19 +17,48 @@ document.addEventListener('DOMContentLoaded', function () {
     const angle = (student.probability / 100) * 2 * Math.PI;
     segments.push({
       name: student.name,
+      probability: student.probability, // для таблицы
       startAngle: currentAngle,
       endAngle: currentAngle + angle,
-      // Цвет генерируется по схеме HSL, равномерно распределив оттенки:
+      // Цвет вычисляется по схеме HSL, равномерно распределяя оттенки
       color: `hsl(${Math.floor(currentAngle * 180 / Math.PI)}, 70%, 60%)`
     });
     currentAngle += angle;
   });
 
-  // Рисуем колесо с учетом текущей ротации
+  // Заполнение таблицы студентов
+  function populateTable() {
+    const tbody = document.getElementById('studentsTable').querySelector('tbody');
+    tbody.innerHTML = '';
+    segments.forEach(segment => {
+      const tr = document.createElement('tr');
+
+      const colorTd = document.createElement('td');
+      const colorBox = document.createElement('div');
+      colorBox.style.width = '20px';
+      colorBox.style.height = '20px';
+      colorBox.style.backgroundColor = segment.color;
+      colorTd.appendChild(colorBox);
+
+      const chanceTd = document.createElement('td');
+      chanceTd.textContent = segment.probability.toFixed(6);
+
+      const nameTd = document.createElement('td');
+      nameTd.textContent = segment.name;
+
+      tr.appendChild(colorTd);
+      tr.appendChild(chanceTd);
+      tr.appendChild(nameTd);
+      tbody.appendChild(tr);
+    });
+  }
+
+  populateTable();
+
+  // Рисуем колесо с учётом текущей ротации
   function drawWheel() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.save();
-    // Переносим начало координат в центр и вращаем колесо
     ctx.translate(centerX, centerY);
     ctx.rotate(rotation);
 
@@ -47,30 +76,25 @@ document.addEventListener('DOMContentLoaded', function () {
       // Рисуем текст сегмента вдоль радиуса (от центра к краю)
       const midAngle = (segment.startAngle + segment.endAngle) / 2;
       ctx.save();
-      // Поворачиваем контекст по направлению сегмента
       ctx.rotate(midAngle);
-      // Перемещаемся к точке, начиная от которой пишем текст
-      ctx.translate(radius - 60, 0);
-      // Текст рисуется по направлению радиуса (без дополнительного поворота)
+      ctx.translate(radius * 0.7, 0); // смещение по радиусу
       ctx.fillStyle = "#000";
-      ctx.font = "14px Arial";
-      ctx.textAlign = "left";
+      ctx.font = "16px Arial";
+      ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText(segment.name, 0, 0);
       ctx.restore();
     });
     ctx.restore();
 
-    // Рисуем указатель, развернутый так, чтобы острая часть смотрела внутрь (влево)
+    // Отрисовка указателя
     drawPointer();
   }
 
+  // Указатель расположен справа от колеса и развернут так, чтобы его острая часть смотрела влево (внутрь)
   function drawPointer() {
     ctx.fillStyle = "#e74c3c";
     ctx.beginPath();
-    // Расчет координат для указателя:
-    // Точка (tip) – на окружности, немного смещенная внутрь: здесь это (centerX + radius - 10, centerY)
-    // Основание указателя – правее этой точки, чтобы треугольник указывал влево.
     const tipX = centerX + radius - 10;
     const tipY = centerY;
     const baseTopX = centerX + radius + 10;
@@ -92,7 +116,6 @@ document.addEventListener('DOMContentLoaded', function () {
     isSpinning = true;
     resultDiv.textContent = "";
 
-    // Случайное число оборотов от 5 до 8 и случайный угол
     const spins = Math.random() * 3 + 5; // от 5 до 8 оборотов
     const finalAngle = spins * 2 * Math.PI + Math.random() * 2 * Math.PI;
     const duration = 5000; // 5 секунд
@@ -101,9 +124,8 @@ document.addEventListener('DOMContentLoaded', function () {
     function animate(now) {
       const elapsed = now - start;
       if (elapsed < duration) {
-        // Функция замедления (easeOut)
         const t = elapsed / duration;
-        const eased = 1 - Math.pow(1 - t, 3);
+        const eased = 1 - Math.pow(1 - t, 3); // ease-out
         rotation = eased * finalAngle;
         drawWheel();
         requestAnimationFrame(animate);
@@ -120,12 +142,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Определяем выбранного студента
   function determineWinner() {
-    // Поскольку указатель находится справа (угол 0 в системе колеса),
-    // угол указателя в системе колеса равен (-rotation) mod (2π)
     let pointerAngle = (-rotation) % (2 * Math.PI);
     if (pointerAngle < 0) pointerAngle += 2 * Math.PI;
 
-    // Находим сегмент, в котором находится указанный угол
     const winningSegment = segments.find(seg => pointerAngle >= seg.startAngle && pointerAngle < seg.endAngle);
     resultDiv.textContent = winningSegment ? `Выбран: ${winningSegment.name}` : "Не удалось определить победителя";
   }
