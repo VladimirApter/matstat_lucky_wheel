@@ -10,7 +10,13 @@ document.addEventListener('DOMContentLoaded', function () {
   let rotation = 0;
   let isSpinning = false;
 
-  // Расчёт углов сегментов (углы отсчитываются от правой стороны)
+  // Константы для анимации (в миллисекундах и радиан/мс)
+  const ACCEL_DURATION = 1500;      // фаза разгона
+  const DECEL_DURATION = 10000;      // фаза торможения
+  const CONST_DURATION_MAX = 3000;  // максимум времени равномерного вращения
+  const MAX_SPEED = 0.015;          // максимальная скорость (рад/мс)
+
+  // Расчёт углов сегментов (начинаем отсчет от правой стороны)
   const segments = [];
   let currentAngle = 0;
   students.forEach((student) => {
@@ -20,7 +26,7 @@ document.addEventListener('DOMContentLoaded', function () {
       probability: student.probability, // для таблицы
       startAngle: currentAngle,
       endAngle: currentAngle + angle,
-      // Цвет вычисляется по схеме HSL, равномерно распределяя оттенки
+      // Цвет вычисляется по схеме HSL, равномерно распределяя оттенки:
       color: `hsl(${Math.floor(currentAngle * 180 / Math.PI)}, 70%, 60%)`
     });
     currentAngle += angle;
@@ -55,7 +61,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   populateTable();
 
-  // Рисуем колесо с учётом текущей ротации
+  // Рисуем колесо с учетом текущей ротации
   function drawWheel() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.save();
@@ -110,31 +116,50 @@ document.addEventListener('DOMContentLoaded', function () {
 
   drawWheel();
 
-  // Анимация вращения
+  // Анимация вращения по фазам
   function spin() {
     if (isSpinning) return;
     isSpinning = true;
     resultDiv.textContent = "";
+    rotation = 0; // сброс вращения для нового запуска
 
-    const spins = Math.random() * 3 + 5; // от 5 до 8 оборотов
-    const finalAngle = spins * 2 * Math.PI + Math.random() * 2 * Math.PI;
-    const duration = 5000; // 5 секунд
-    const start = performance.now();
+    // Фаза равномерного вращения: случайное время от 0 до CONST_DURATION_MAX
+    const constantPhaseTime = Math.random() * CONST_DURATION_MAX;
+    const totalDuration = ACCEL_DURATION + constantPhaseTime + DECEL_DURATION;
+
+    const startTime = performance.now();
+    let lastTime = startTime;
 
     function animate(now) {
-      const elapsed = now - start;
-      if (elapsed < duration) {
-        const t = elapsed / duration;
-        const eased = 1 - Math.pow(1 - t, 3); // ease-out
-        rotation = eased * finalAngle;
-        drawWheel();
-        requestAnimationFrame(animate);
+      const elapsed = now - startTime;
+      const dt = now - lastTime; // время с предыдущего кадра
+      let currentSpeed = 0;
+
+      if (elapsed < ACCEL_DURATION) {
+        // Фаза разгона (линейное ускорение)
+        const factor = elapsed / ACCEL_DURATION;
+        currentSpeed = MAX_SPEED * factor;
+      } else if (elapsed < ACCEL_DURATION + constantPhaseTime) {
+        // Фаза равномерного вращения (константная скорость)
+        currentSpeed = MAX_SPEED;
+      } else if (elapsed < totalDuration) {
+        // Фаза торможения (квадратичный ease-out)
+        const tDecel = elapsed - ACCEL_DURATION - constantPhaseTime;
+        const factor = tDecel / DECEL_DURATION; // от 0 до 1
+        // При factor=0: скорость = MAX_SPEED, при factor=1: скорость = 0
+        currentSpeed = MAX_SPEED * (1 - Math.pow(factor, 2));
       } else {
-        rotation = finalAngle;
-        drawWheel();
+        // Завершаем анимацию: гарантированно останавливаем колесо
         isSpinning = false;
+        drawWheel();
         determineWinner();
+        return;
       }
+
+      rotation += currentSpeed * dt;
+      lastTime = now;
+      drawWheel();
+      requestAnimationFrame(animate);
     }
 
     requestAnimationFrame(animate);
@@ -142,6 +167,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Определяем выбранного студента
   function determineWinner() {
+    // Указатель находится справа (угол 0 в системе колеса)
     let pointerAngle = (-rotation) % (2 * Math.PI);
     if (pointerAngle < 0) pointerAngle += 2 * Math.PI;
 
