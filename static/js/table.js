@@ -11,28 +11,28 @@ export function populateTable(students, wheel) {
     const segment = wheel.segments.find(seg => seg.name === student.name);
     if (!segment) tr.classList.add("inactive");
 
-    // Цвет сегмента (если студент исключён, серый)
+    // Цвет сегмента (если студент исключён, остаётся прежним, но в таблице отображается через стиль inactive)
     const colorTd = document.createElement("td");
     const colorBox = document.createElement("div");
-    colorBox.style.width = "20px";
-    colorBox.style.height = "20px";
     colorBox.style.backgroundColor = student.color;
     colorTd.appendChild(colorBox);
 
-    // Вероятность (если студент отсутствует, показываем 0%)
+    // Вероятность (округление до 2 знаков)
     const chanceTd = document.createElement("td");
-    chanceTd.textContent = segment ? segment.probability.toFixed(6) : "0.000000";
+    chanceTd.textContent = segment ? segment.probability.toFixed(2) + "%" : "0.00%";
 
     // Имя студента
     const nameTd = document.createElement("td");
+    nameTd.classList.add("name");
     nameTd.textContent = student.name;
+    nameTd.setAttribute("title", student.name);
 
-    // Чекбокс для исключения из колеса
+    // Чекбокс для исключения
     const checkboxTd = document.createElement("td");
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
     checkbox.id = `student-checkbox-${student.name}`;
-    checkbox.checked = !segment; // Если сегмента нет, значит студент уже отмечен отсутствующим
+    checkbox.checked = !segment;
     checkbox.addEventListener("change", updateWheel);
     checkboxTd.appendChild(checkbox);
 
@@ -44,7 +44,6 @@ export function populateTable(students, wheel) {
   });
 }
 
-// Функция получения списка исключенных студентов
 export function getExcludedStudents() {
   return students
     .filter(student => {
@@ -52,4 +51,12 @@ export function getExcludedStudents() {
       return checkbox && checkbox.checked;
     })
     .map(student => student.name);
+}
+
+export function markStudentAsChosen(name) {
+  const checkbox = document.getElementById(`student-checkbox-${name}`);
+  if (checkbox) {
+    checkbox.checked = true;
+    updateWheel();
+  }
 }

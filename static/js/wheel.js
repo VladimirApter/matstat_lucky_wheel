@@ -13,7 +13,7 @@ export function setupWheel(students) {
       probability: student.probability,
       startAngle: currentAngle,
       endAngle: currentAngle + angle,
-      color: student.color // Используем закреплённый цвет
+      color: student.color
     };
     currentAngle += angle;
     return segment;
@@ -46,22 +46,27 @@ export function setupWheel(students) {
       ctx.fillText(segment.name, 0, 0);
       ctx.restore();
     });
-
     ctx.restore();
     drawPointer();
   }
 
   function drawPointer() {
+    ctx.save();
+    // Настраиваем тень для указателя
+    ctx.shadowColor = "rgba(0, 0, 0, 0.3)";
+    ctx.shadowBlur = 4;
     ctx.fillStyle = "#e74c3c";
     ctx.beginPath();
     const tipX = centerX + radius - 10;
     const tipY = centerY;
-    const baseX = centerX + radius + 10;
+    const baseX = centerX + radius + 20;
+    // Рисуем стильный треугольный указатель
     ctx.moveTo(tipX, tipY);
-    ctx.lineTo(baseX, tipY - 10);
-    ctx.lineTo(baseX, tipY + 10);
+    ctx.lineTo(baseX, tipY - 15);
+    ctx.lineTo(baseX, tipY + 15);
     ctx.closePath();
     ctx.fill();
+    ctx.restore();
   }
 
   drawWheel();

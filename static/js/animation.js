@@ -1,4 +1,19 @@
+import { markStudentAsChosen } from "./table.js";
+
 export function startSpin(wheel) {
+  const spinButton = document.getElementById("spinButton");
+  spinButton.disabled = true; // Делаем кнопку неактивной
+
+  const resultDiv = document.getElementById("result");
+  resultDiv.textContent = "К доске пойдёёёт";
+  let dotState = 0;
+  // Запускаем анимацию троеточия (обновляем текст каждые 500 мс)
+  const ellipsisInterval = setInterval(() => {
+    dotState = (dotState + 1) % 4; // 0,1,2,3
+    let dots = ".".repeat(dotState);
+    resultDiv.textContent = "К доске пойдёёёт" + dots;
+  }, 500);
+
   const { drawWheel, segments } = wheel;
   let rotation = 0;
   let isSpinning = true;
@@ -29,7 +44,9 @@ export function startSpin(wheel) {
       currentSpeed = MAX_SPEED * Math.exp(-k * (tDecel / DECEL_DURATION));
     } else {
       isSpinning = false;
+      clearInterval(ellipsisInterval); // Останавливаем анимацию троеточия
       determineWinner(rotation, segments);
+      spinButton.disabled = false; // Активируем кнопку
       return;
     }
 
@@ -47,5 +64,10 @@ function determineWinner(rotation, segments) {
   if (pointerAngle < 0) pointerAngle += 2 * Math.PI;
 
   const winningSegment = segments.find(seg => pointerAngle >= seg.startAngle && pointerAngle < seg.endAngle);
-  document.getElementById("result").textContent = winningSegment ? `Выбран: ${winningSegment.name}` : "Не удалось определить победителя";
+  const resultDiv = document.getElementById("result");
+  if (winningSegment) {
+    // Выводим сообщение с именем студента и смайликом
+    resultDiv.textContent = `К доске пойдёёёт ${winningSegment.name} 🎉`;
+    markStudentAsChosen(winningSegment.name);
+  }
 }

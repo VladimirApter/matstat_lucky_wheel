@@ -1,0 +1,113 @@
+/* Стили для контейнера таблицы */
+.table-container {
+  flex: 1;
+  margin: 40px 20px 0 20px;  /* Увеличен верхний отступ */
+}
+
+/* Заголовок таблицы выровнен по левому краю */
+.table-heading {
+  text-align: left;
+  margin-left: 15px;
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+
+/* Общие стили таблицы */
+table {
+  width: 90%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  margin: 0 auto;
+}
+
+/* Заголовки таблицы */
+th {
+  background: #007bff;
+  color: white;
+  padding: 12px 10px;
+  text-align: center;
+  font-size: 16px;
+  white-space: nowrap;
+}
+
+/* Для колонки "Имя" оставляем заголовок по центру */
+th.name {
+  text-align: center;
+}
+
+/* Закругление заголовков */
+th:first-child {
+  border-top-left-radius: 10px;
+}
+th:last-child {
+  border-top-right-radius: 10px;
+  padding-right: 40px;
+}
+
+/* Общий стиль ячеек */
+td {
+  padding: 8px 10px;
+  font-size: 14px;
+  color: #333;
+  border-bottom: 1px solid #ddd;
+  text-align: center;
+}
+
+/* Чередование строк */
+tbody tr:nth-child(even) {
+  background: #f8f9fa;
+}
+
+/* Обрезка длинных имён с "..." и выравнивание по левому краю */
+td.name {
+  max-width: 90px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+  padding-left: 75px;
+}
+
+td:first-child div {
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  display: inline-block;
+  border: 1px solid #1f1f1f;
+}
+
+/* Колонка "Шанс" (вторая колонка) */
+td:nth-child(2) {
+  width: 70px;
+  padding-right: 20px;
+}
+
+/* Колонка "Исключить" (последняя колонка) */
+td:last-child {
+  text-align: center;
+  width: 80px;
+  padding-right: 40px;
+}
+
+/* Стиль для исключённых студентов */
+tr.inactive {
+  opacity: 0.5;
+  color: #888;
+}
+
+/* Для исключённых студентов у квадратиков всегда серый фон */
+tr.inactive td:first-child div {
+  background-color: #ddd !important;
+}
+
+/* Закругление углов у последней строки */
+tbody tr:last-child td:first-child {
+  border-bottom-left-radius: 10px;
+}
+tbody tr:last-child td:last-child {
+  border-bottom-right-radius: 10px;
+}
