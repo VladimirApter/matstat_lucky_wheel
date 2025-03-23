@@ -15,11 +15,10 @@
             <th>Цвет</th>
             <th>Шанс (%)</th>
             <th>Имя</th>
+            <th>Нет на паре</th>
           </tr>
         </thead>
-        <tbody>
-          <!-- Таблица будет заполнена скриптом -->
-        </tbody>
+        <tbody></tbody>
       </table>
     </div>
     <div class="wheel-container">
@@ -32,6 +31,6 @@
   <script>
     const students = {{ students | tojson | safe }};
   </script>
-  <script src="{{ url_for('static', filename='js/wheel.js') }}"></script>
+  <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>

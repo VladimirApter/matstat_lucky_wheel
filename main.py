@@ -23,9 +23,7 @@ class StudentSelector:
                     continue
 
                 total = sum(
-                    float(str(val).replace(',', '.')) if str(val).replace(',',
-                                                                          '').replace(
-                        '.', '').isdigit() else 0.0
+                    float(str(val).replace(',', '.')) if str(val).replace(',', '').replace('.', '').isdigit() else 0.0
                     for val in row.iloc[practice_columns]
                 )
                 students.append({
@@ -38,41 +36,11 @@ class StudentSelector:
 
         return students
 
-    @staticmethod
-    def calculate_probabilities(scores):
-        epsilon = 1e-8
-        adjusted_scores = [s + epsilon for s in scores]
-        inverted = [1 / (s + 0.01) for s in adjusted_scores]
-        total = sum(inverted)
-
-        probabilities = [w / total for w in inverted]
-        probabilities[-1] += 1.0 - sum(probabilities)
-        return [p / sum(probabilities) for p in probabilities]
-
     @classmethod
     def prepare_students(cls):
         students = cls.get_student_data()
         if not students:
             return None
-
-        scores = [s['score'] for s in students]
-
-        try:
-            exact_probabilities = cls.calculate_probabilities(scores)
-        except Exception as e:
-            print(f"Ошибка расчета вероятностей: {e}")
-            exact_probabilities = [1 / len(scores)] * len(scores)
-
-        display_probabilities = [round(p * 100, 6) for p in
-                                 exact_probabilities]
-
-        # Корректировка суммы до 100%
-        sum_display = sum(display_probabilities)
-        display_probabilities[-1] += round(100 - sum_display, 6)
-
-        for i, s in enumerate(students):
-            s['probability'] = float(display_probabilities[i])
-
         return students
 
 
@@ -84,7 +52,7 @@ def wheel_of_fortune():
 
     formatted_students = [{
         "name": s['name'],
-        "probability": s['probability']
+        "score": s['score']
     } for s in students]
 
     return render_template('wheel.html', students=formatted_students)

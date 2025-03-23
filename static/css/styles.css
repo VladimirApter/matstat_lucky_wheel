@@ -58,3 +58,21 @@ button:hover {
   font-size: 20px;
   font-weight: bold;
 }
+
+
+th, td {
+  padding: 8px;
+  border-bottom: 1px solid #ddd;
+  text-align: left;
+}
+
+input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+/* Стиль для студентов, отсутствующих на паре */
+tr.inactive {
+  opacity: 0.5;
+}
