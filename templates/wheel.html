@@ -1,45 +1,22 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-    <title>MatStat Lucky Wheel</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  <meta charset="UTF-8">
+  <title>Колесо фортуны студентов</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
-<h1>🎡 MatStat Lucky Wheel</h1>
+  <div class="container">
+    <h1>Колесо фортуны студентов</h1>
+    <canvas id="wheelCanvas" width="500" height="500"></canvas>
+    <button id="spinButton">Крутить</button>
+    <div id="result"></div>
+  </div>
 
-<div class="wheel-container">
-    <div id="pointer"></div>
-    <canvas id="wheel"></canvas>
-</div>
-
-<div id="result"></div>
-<button onclick="startSpin()">Крутить колесо! 🎰</button>
-
-<table>
-    <thead>
-    <tr>
-        <th>Цвет</th>
-        <th>Студент</th>
-        <th>Баллы</th>
-        <th>Шанс</th>
-    </tr>
-    </thead>
-    <tbody>
-    {% for student in students %}
-    <tr>
-        <td><div class="student-color" style="background: {{ student.color|safe }}"></div></td>
-        <td>{{ student.name }}</td>
-        <td>{{ student.score }}</td>
-        <td>{{ student.probability }}%</td>
-    </tr>
-    {% endfor %}
-    </tbody>
-</table>
-
-<script type="text/javascript">
-    // Передача данных из Jinja в JavaScript
-    const students = {{ students|tojson|safe }};
-</script>
-<script src="{{ url_for('static', filename='js/wheel.js') }}"></script>
+  <script>
+    // Передаём список студентов с сервера в JS переменную.
+    const students = {{ students | tojson | safe }};
+  </script>
+  <script src="{{ url_for('static', filename='js/wheel.js') }}"></script>
 </body>
 </html>

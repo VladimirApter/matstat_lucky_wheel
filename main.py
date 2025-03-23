@@ -1,9 +1,8 @@
 import pandas as pd
-import numpy as np
-from flask import Flask, render_template, request, session
+from flask import Flask, render_template
 
 app = Flask(__name__, static_folder='static', static_url_path='/static')
-app.secret_key = 'your_secret_key_here'  # Замените на реальный секретный ключ
+app.secret_key = 'your_secret_key_here'
 
 
 class StudentSelector:
@@ -41,19 +40,13 @@ class StudentSelector:
 
     @staticmethod
     def calculate_probabilities(scores):
-        # Защита от нулевых баллов
         epsilon = 1e-8
         adjusted_scores = [s + epsilon for s in scores]
-
-        # Инвертируем баллы
         inverted = [1 / (s + 0.01) for s in adjusted_scores]
         total = sum(inverted)
 
-        # Нормализуем с точной коррекцией
         probabilities = [w / total for w in inverted]
         probabilities[-1] += 1.0 - sum(probabilities)
-
-        # Финализируем сумму
         return [p / sum(probabilities) for p in probabilities]
 
     @classmethod
@@ -71,51 +64,30 @@ class StudentSelector:
             exact_probabilities = [1 / len(scores)] * len(scores)
 
         display_probabilities = [round(p * 100, 6) for p in
-                                 exact_probabilities]  # Больше знаков
+                                 exact_probabilities]
 
-        # Корректируем отображение для точной суммы 100%
+        # Корректировка суммы до 100%
         sum_display = sum(display_probabilities)
-        display_probabilities[-1] += 100 - sum_display
+        display_probabilities[-1] += round(100 - sum_display, 6)
 
         for i, s in enumerate(students):
-            s['probability'] = round(display_probabilities[i],
-                                     2)  # Округляем только для отображения
+            s['probability'] = float(display_probabilities[i])
 
         return students
 
-    @classmethod
-    def select_winner(cls, students):
-        names = [s['name'] for s in students]
-        probabilities = [s['probability'] / 100 for s in students]
 
-        # Точная нормализация
-        sum_probs = sum(probabilities)
-        normalized = [p / sum_probs for p in probabilities]
-
-        return np.random.choice(names, p=normalized)
-
-
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/')
 def wheel_of_fortune():
-    # Получаем или создаем список студентов
     students = StudentSelector.prepare_students()
-
     if students is None:
         return "Нет данных о студентах", 500
 
-    # Обработка нажатия кнопки
-    if request.method == 'POST':
-        winner = StudentSelector.select_winner(students)
-        session['winner'] = winner
-    else:
-        session.pop('winner', None)  # Сбрасываем победителя при новом заходе
+    formatted_students = [{
+        "name": s['name'],
+        "probability": s['probability']
+    } for s in students]
 
-    # Помечаем победителя в данных
-    current_winner = session.get('winner')
-    for s in students:
-        s['is_winner'] = (s['name'] == current_winner)
-
-    return render_template('wheel.html', students=students)
+    return render_template('wheel.html', students=formatted_students)
 
 
 if __name__ == '__main__':
