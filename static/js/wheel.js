@@ -10,9 +10,9 @@ document.addEventListener('DOMContentLoaded', function () {
   let rotation = 0;
   let isSpinning = false;
 
-  // Константы для анимации (в миллисекундах и радиан/мс)
+  // Константы для анимации (в миллисекундах и рад/мс)
   const ACCEL_DURATION = 1500;      // фаза разгона
-  const DECEL_DURATION = 10000;      // фаза торможения
+  const DECEL_DURATION = 10000;     // фаза торможения
   const CONST_DURATION_MAX = 3000;  // максимум времени равномерного вращения
   const MAX_SPEED = 0.015;          // максимальная скорость (рад/мс)
 
@@ -132,7 +132,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function animate(now) {
       const elapsed = now - startTime;
-      const dt = now - lastTime; // время с предыдущего кадра
+      const dt = now - lastTime; // интервал между кадрами
       let currentSpeed = 0;
 
       if (elapsed < ACCEL_DURATION) {
@@ -143,11 +143,11 @@ document.addEventListener('DOMContentLoaded', function () {
         // Фаза равномерного вращения (константная скорость)
         currentSpeed = MAX_SPEED;
       } else if (elapsed < totalDuration) {
-        // Фаза торможения (квадратичный ease-out)
+        // Фаза торможения с экспоненциальным снижением, зависящим от текущей скорости
         const tDecel = elapsed - ACCEL_DURATION - constantPhaseTime;
-        const factor = tDecel / DECEL_DURATION; // от 0 до 1
-        // При factor=0: скорость = MAX_SPEED, при factor=1: скорость = 0
-        currentSpeed = MAX_SPEED * (1 - Math.pow(factor, 2));
+        // k - коэффициент экспоненциального замедления, подобран так, чтобы при tDecel = DECEL_DURATION скорость почти достигала 0
+        const k = 5;
+        currentSpeed = MAX_SPEED * Math.exp(-k * (tDecel / DECEL_DURATION));
       } else {
         // Завершаем анимацию: гарантированно останавливаем колесо
         isSpinning = false;
