@@ -1,20 +1,21 @@
-/* Стили для контейнера таблицы */
-.table-container {
-  flex: 1;
-  margin: 40px 20px 0 20px;  /* Увеличен верхний отступ */
+/* Обёртка таблицы – чтобы заголовок и таблица имели одинаковый левый отступ */
+.table-wrapper {
+  margin: 0 auto;      /* Центрирование обёртки */
+  width: 90%;          /* Ширина совпадает с таблицей */
 }
 
-/* Заголовок таблицы выровнен по левому краю */
+/* Заголовок таблицы выровнен по левому краю относительно обёртки */
 .table-heading {
   text-align: left;
-  margin-left: 15px;
+  margin: 0;           /* Убираем лишние отступы */
+  padding-left: 10px;  /* Отступ, соответствующий отступам таблицы */
   font-size: 24px;
   margin-bottom: 10px;
 }
 
 /* Общие стили таблицы */
 table {
-  width: 90%;
+  width: 100%;
   border-collapse: separate;
   border-spacing: 0;
   background: #fff;
@@ -24,7 +25,8 @@ table {
   margin: 0 auto;
 }
 
-/* Заголовки таблицы */
+/* Остальные стили таблицы (оставляем без изменений) */
+
 th {
   background: #007bff;
   color: white;
@@ -34,12 +36,10 @@ th {
   white-space: nowrap;
 }
 
-/* Для колонки "Имя" оставляем заголовок по центру */
 th.name {
   text-align: center;
 }
 
-/* Закругление заголовков */
 th:first-child {
   border-top-left-radius: 10px;
 }
@@ -48,7 +48,6 @@ th:last-child {
   padding-right: 40px;
 }
 
-/* Общий стиль ячеек */
 td {
   padding: 8px 10px;
   font-size: 14px;
@@ -57,12 +56,10 @@ td {
   text-align: center;
 }
 
-/* Чередование строк */
 tbody tr:nth-child(even) {
   background: #f8f9fa;
 }
 
-/* Обрезка длинных имён с "..." и выравнивание по левому краю */
 td.name {
   max-width: 90px;
   white-space: nowrap;
@@ -80,34 +77,42 @@ td:first-child div {
   border: 1px solid #1f1f1f;
 }
 
-/* Колонка "Шанс" (вторая колонка) */
 td:nth-child(2) {
   width: 70px;
   padding-right: 20px;
 }
 
-/* Колонка "Исключить" (последняя колонка) */
 td:last-child {
   text-align: center;
   width: 80px;
   padding-right: 40px;
 }
 
-/* Стиль для исключённых студентов */
 tr.inactive {
   opacity: 0.5;
   color: #888;
 }
 
-/* Для исключённых студентов у квадратиков всегда серый фон */
 tr.inactive td:first-child div {
   background-color: #ddd !important;
 }
 
-/* Закругление углов у последней строки */
 tbody tr:last-child td:first-child {
   border-bottom-left-radius: 10px;
 }
+
 tbody tr:last-child td:last-child {
   border-bottom-right-radius: 10px;
+}
+
+/* Обёртка таблицы – чтобы заголовок и таблица располагались ниже */
+.table-wrapper {
+  margin: 0px auto 0 auto;  /* Верхний отступ увеличен до 60px */
+  width: 90%;
+}
+
+/* Если вы используете .table-container для расположения таблицы */
+.table-container {
+  flex: 1;
+  margin: 80px 20px 0 20px;  /* Увеличенный верхний отступ */
 }

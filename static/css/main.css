@@ -24,7 +24,15 @@ body {
 }
 
 #result {
-  margin-top: 20px;
-  font-size: 20px;
+  margin-top: 40px;
+  font-size: 40px;
+  font-weight: bold;
+}
+
+/* Стили для блока результата – выравнивание по центру */
+.result {
+  text-align: center;
+  margin-top: 40px;
+  font-size: 40px;
   font-weight: bold;
 }

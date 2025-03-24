@@ -5,3 +5,20 @@ canvas {
   border-radius: 50%;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
 }
+
+.wheel-container {
+  position: relative; /* Добавляем для позиционирования логотипа */
+}
+
+.center-logo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-55%, -40%);
+  width: 220px; /* Настройте под ваш размер */
+  height: 220px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  pointer-events: none; /* Чтобы можно было кликать сквозь изображение */
+}

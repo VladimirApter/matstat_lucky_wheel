@@ -2,16 +2,15 @@ import { markStudentAsChosen } from "./table.js";
 
 export function startSpin(wheel) {
   const spinButton = document.getElementById("spinButton");
-  spinButton.disabled = true; // Делаем кнопку неактивной
+  spinButton.disabled = true; // Отключаем кнопку
 
   const resultDiv = document.getElementById("result");
-  resultDiv.textContent = "К доске пойдёёёт";
+  resultDiv.textContent = "К доске пойдёёёёт";
   let dotState = 0;
-  // Запускаем анимацию троеточия (обновляем текст каждые 500 мс)
   const ellipsisInterval = setInterval(() => {
-    dotState = (dotState + 1) % 4; // 0,1,2,3
+    dotState = (dotState + 1) % 4;
     let dots = ".".repeat(dotState);
-    resultDiv.textContent = "К доске пойдёёёт" + dots;
+    resultDiv.textContent = "К доске пойдёёёёт" + dots;
   }, 500);
 
   const { drawWheel, segments } = wheel;
@@ -20,7 +19,7 @@ export function startSpin(wheel) {
 
   const ACCEL_DURATION = 1500;
   const DECEL_DURATION = 10000;
-  const CONST_DURATION_MAX = 3000;
+  const CONST_DURATION_MAX = 4000;
   const MAX_SPEED = 0.015;
 
   const constantPhaseTime = Math.random() * CONST_DURATION_MAX;
@@ -46,7 +45,7 @@ export function startSpin(wheel) {
       isSpinning = false;
       clearInterval(ellipsisInterval); // Останавливаем анимацию троеточия
       determineWinner(rotation, segments);
-      spinButton.disabled = false; // Активируем кнопку
+      spinButton.disabled = false; // Включаем кнопку после завершения
       return;
     }
 
@@ -66,8 +65,9 @@ function determineWinner(rotation, segments) {
   const winningSegment = segments.find(seg => pointerAngle >= seg.startAngle && pointerAngle < seg.endAngle);
   const resultDiv = document.getElementById("result");
   if (winningSegment) {
-    // Выводим сообщение с именем студента и смайликом
-    resultDiv.textContent = `К доске пойдёёёт ${winningSegment.name} 🎉`;
-    markStudentAsChosen(winningSegment.name);
+    resultDiv.textContent = `К доске пойдёёёёт ${winningSegment.name} 🎉`;
+    setTimeout(() => {
+      markStudentAsChosen(winningSegment.name);
+    }, 5500);
   }
 }

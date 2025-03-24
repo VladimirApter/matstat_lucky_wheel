@@ -12,27 +12,28 @@
 <body>
   <div class="main-container">
     <div class="table-container">
-      <!-- Заголовок выровнен по левому краю -->
-      <h2 class="table-heading">Список студентов</h2>
-      <table id="studentsTable">
-        <thead>
+      <div class="table-wrapper">
+        <h2 class="table-heading">Список студентов</h2>
+        <table id="studentsTable">
+          <thead>
           <tr>
             <th>Цвет</th>
             <th>Шанс (%)</th>
             <th class="name">Имя</th>
             <th>Исключить</th>
           </tr>
-        </thead>
-        <tbody>
+          </thead>
+          <tbody>
           <!-- Таблица будет заполнена скриптом -->
-        </tbody>
-      </table>
-      <!-- Блок результата перемещён в контейнер таблицы -->
-      <div id="result"></div>
+          </tbody>
+        </table>
+        <div id="result" class="result"></div>
+      </div>
     </div>
     <div class="wheel-container">
       <h1>matstat lucky wheel</h1>
       <canvas id="wheelCanvas" width="700" height="700"></canvas>
+      <img id="centerLogo" src="{{ url_for('static', filename='images/wheel-logo.png') }}" class="center-logo">
       <button id="spinButton">Крутить</button>
     </div>
   </div>
