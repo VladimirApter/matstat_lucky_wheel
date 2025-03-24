@@ -93,5 +93,10 @@ def wheel_of_fortune(group_name):
     return render_template('wheel.html', students=formatted_students)
 
 
+@app.route('/')
+def main_page():
+    return render_template('main.html')
+
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
