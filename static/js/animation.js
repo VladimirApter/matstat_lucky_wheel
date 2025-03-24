@@ -68,6 +68,6 @@ function determineWinner(rotation, segments) {
     resultDiv.textContent = `К доске пойдёёёёт ${winningSegment.name} 🎉`;
     setTimeout(() => {
       markStudentAsChosen(winningSegment.name);
-    }, 5500);
+    }, 2000);
   }
 }
