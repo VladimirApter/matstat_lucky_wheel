@@ -8,8 +8,15 @@ export function setupWheel(students) {
   let currentAngle = 0;
   const segments = students.map((student) => {
     const angle = (student.probability / 100) * 2 * Math.PI;
+    let st_name = student.name;
+    if (student.probability < 2){
+      st_name = "";
+    }
+    else if (st_name.length > 20){
+      st_name = st_name.slice(0, 20) + "..."
+    }
     const segment = {
-      name: student.name,
+      name: st_name,
       probability: student.probability,
       startAngle: currentAngle,
       endAngle: currentAngle + angle,

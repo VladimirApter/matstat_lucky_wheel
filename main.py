@@ -16,6 +16,17 @@ GROUPS = {
     'kn': '393945752'
 }
 
+GROUPS_COUNT ={
+    '0': 14,
+    '313135890' : 14,
+    '429115037' : 15,
+    '1499384932' : 15,
+    '1434241927' : 13,
+    '101485156' : 13,
+    '1801994266': 13,
+    '2063966210': 14,
+    '393945752': 4,
+}
 
 class StudentSelector:
     EXCLUDED_STUDENTS = {
@@ -41,7 +52,7 @@ class StudentSelector:
         practice_columns = [9, 11, 13, 15, 17, 20, 24, 26, 29, 31, 33, 35]
 
         students = []
-        for row_idx in range(0, 13):
+        for row_idx in range(GROUPS_COUNT[gid]):
             try:
                 row = df.iloc[row_idx]
                 name = row.iloc[0]
@@ -51,11 +62,10 @@ class StudentSelector:
                     continue
 
                 total = sum(
-                    float(str(val).replace(',', '.')) if str(val).replace(',',
-                                                                          '').replace(
-                        '.', '').isdigit() else 0.0
+                    float(str(val).replace(',', '.')) if str(val).replace(',', '').replace('.', '').isdigit() else 0.0
                     for val in row.iloc[practice_columns]
                 )
+
                 students.append({
                     'name': name,
                     'score': round(total, 2)
@@ -66,13 +76,6 @@ class StudentSelector:
 
         return students
 
-    @classmethod
-    def prepare_students(cls, gid):
-        students = cls.get_student_data(gid)
-        if not students:
-            return None
-        return students
-
 
 @app.route('/<group_name>')
 def wheel_of_fortune(group_name):
@@ -80,7 +83,7 @@ def wheel_of_fortune(group_name):
         abort(404)
 
     gid = GROUPS[group_name]
-    students = StudentSelector.prepare_students(gid)
+    students = StudentSelector.get_student_data(gid)
 
     if students is None:
         return "Нет данных о студентах", 500
