@@ -28,10 +28,21 @@ body {
   align-items: center;
 }
 
+.centered h1 {
+  margin-bottom: 30px;
+  font-size: 2.5em;
+}
+
+.centered {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
 header {
   grid-column: 1 / -1;
-  text-align: center;
-  margin-bottom: 1rem;
   position: relative;
 }
 

@@ -1,0 +1,40 @@
+﻿.rainbow-button {
+    padding: 1.2rem 2rem;
+    font-size: 1rem;
+    font-weight: bold;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    background: linear-gradient(
+            270deg,
+            #ff0000,
+            #ff9900,
+            #33cc33,
+            #3399ff,
+            #9933ff,
+            #ff3399,
+            #ff0000
+    );
+    background-size: 1400% 1400%;
+    animation: rainbowShift 8s ease infinite;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease;
+}
+
+.rainbow-button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes rainbowShift {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}

@@ -8,8 +8,8 @@ export function populateTable(students, wheel) {
     const tr = document.createElement("tr");
 
     // Проверяем, есть ли студент в колесе (если нет, он исключён)
-    // const segment = wheel.segments.find(seg => seg.name === student.name);
-    // if (!segment) tr.classList.add("inactive");
+    const segment = wheel.segments.find(seg => seg.name === student.name);
+    if (!segment) tr.classList.add("inactive");
 
     // Цвет сегмента (если студент исключён, остаётся прежним, но в таблице отображается через стиль inactive)
     const colorTd = document.createElement("td");
@@ -19,7 +19,7 @@ export function populateTable(students, wheel) {
 
     // Вероятность (округление до 2 знаков)
     const chanceTd = document.createElement("td");
-    chanceTd.textContent = student.probability.toFixed(2) + "%";
+    chanceTd.textContent = segment ? segment.probability.toFixed(2) + "%" : "0.00%";
 
     // Имя студента
     const nameTd = document.createElement("td");
@@ -32,7 +32,7 @@ export function populateTable(students, wheel) {
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
     checkbox.id = `student-checkbox-${student.name}`;
-    checkbox.checked = true;
+    checkbox.checked = !segment;
     checkbox.addEventListener("change", updateWheel);
     checkboxTd.appendChild(checkbox);
 
