@@ -184,8 +184,4 @@ def next_message():
 
 
 if __name__ == '__main__':
-    # app.run(host='0.0.0.0', port=5000)
-    server = Server(app.wsgi_app)
-    server.watch('static/')
-    server.watch('templates/')
-    server.serve()
+    app.run(host='0.0.0.0', port=5000)
