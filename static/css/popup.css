@@ -1,0 +1,60 @@
+﻿#popup-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 10px;
+    z-index: 9999;
+}
+
+.popup {
+    background-color: #fff;
+    color: #333;
+    padding: 15px 20px;
+    border-radius: 10px;
+    border: blue 2px solid;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    max-width: 500px;
+    position: relative;
+}
+
+.popup.show {
+    animation: slideIn 0.6s ease forwards;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease, transform 0.5s ease;
+}
+
+.popup.hide {
+    animation: slideOut 1.0s ease forwards;
+    transform: translateY(0);
+    transition: opacity 1s ease, transform 1s ease;
+}
+
+
+.popup .close-btn {
+    position: absolute;
+    top: 5px;
+    right: 8px;
+    font-size: 16px;
+    color: #888;
+    cursor: pointer;
+}
+
+.popup .close-btn:hover {
+    color: #000;
+}
+
+@keyframes slideIn {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideOut {
+    to {
+        opacity: 0;
+        transform: translateY(0);
+    }
+}

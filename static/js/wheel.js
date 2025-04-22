@@ -8,7 +8,15 @@ export function setupWheel(students) {
   let currentAngle = 0;
   const segments = students.map((student) => {
     const angle = (student.probability / 100) * 2 * Math.PI;
+    let st_name = student.name;
+    if (student.probability < 2){
+      st_name = "";
+    }
+    else if (st_name.length > 20){
+      st_name = st_name.slice(0, 20) + "..."
+    }
     const segment = {
+      show_name: st_name,
       name: student.name,
       probability: student.probability,
       startAngle: currentAngle,
@@ -43,7 +51,7 @@ export function setupWheel(students) {
       ctx.font = "16px Arial";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillText(segment.name, 0, 0);
+      ctx.fillText(segment.show_name, 0, 0);
       ctx.restore();
     });
     ctx.restore();

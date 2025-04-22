@@ -3,13 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <title>MatStat Lucky Wheel</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/mainPage.css') }}">
+  <link rel="stylesheet" href="../static/css/mainPage.css">
+  <link rel="stylesheet" href="../static/css/popup.css">
+  <link rel="stylesheet" href="../static/css/buttons.css">
+  <link rel="stylesheet" href="../static/css/rainbowButton.css">
   <link href="https://fonts.googleapis.com/css2?family=Orbitron&display=swap" rel="stylesheet">
 </head>
 <body>
   <div class="container">
     <header>
-      <h1>MATSTAT LUCKY WHEEL</h1>
+      <div class="centered">
+        <h1>MATSTAT LUCKY WHEEL</h1>
+        <button id="popup-btn" class="rainbow-button">Мне повезёт</button>
+      </div>
     </header>
     <section class="intro">
       <div class="intro-image"></div>
@@ -32,8 +38,11 @@
       </ul>
     </section>
   </div>
+  <div id="popup-container">
+  </div>
   <footer>
     <p>matstat lucky wheel 2025 Все права защищены</p>
   </footer>
+  <script src="/static/js/quotes.js"></script>
 </body>
 </html>
