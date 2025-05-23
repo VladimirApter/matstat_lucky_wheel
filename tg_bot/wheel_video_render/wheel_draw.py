@@ -1,17 +1,20 @@
 #!/usr/bin/env python3
-"""Drawing functions for Lucky Wheel – rotating layer + static overlay."""
+"""Drawing functions for Lucky Wheel – rotating layer + static overlay.
+
+* Logo rendered with high‑quality Lanczos resampling.
+* PNGs exported at **200 dpi** → центр‑лого заметно чётче.
+"""
 
 from __future__ import annotations
 import io, math
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
-
+from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 import wheel_config as cfg
 from wheel_helpers import fetch_students, weights, hsl_color, trim_name
 
 # ────────────────────────────────────────────────────────────────────────────
-# Internal helper: create figure/axes without margins so that (0,0) is exact
-# centre for both rotating and static layers → perfect alignment.
+# Internal helper: create figure/axes without margins (exact centre alignment)
 # ────────────────────────────────────────────────────────────────────────────
 
 def _fig_ax():
@@ -19,18 +22,16 @@ def _fig_ax():
         figsize=(cfg.CANVAS_PX / 100, cfg.CANVAS_PX / 100),
         subplot_kw={"aspect": "equal"},
     )
-    # Remove default padding around the figure to guarantee identical extents
     fig.subplots_adjust(left=0, right=1, top=1, bottom=0)
     fig.patch.set_alpha(0)
     ax.axis("off")
     return fig, ax
 
-# ────────────────────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
 # Rotating coloured layer (sectors + labels)
-# ────────────────────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
 
 def draw_rotating_layer(group: str) -> bytes:
-    """Return transparent PNG bytes of coloured wheel that will be rotated."""
     students = fetch_students(group)
     probs    = weights(students)
 
@@ -53,13 +54,12 @@ def draw_rotating_layer(group: str) -> bytes:
         wedgeprops={"edgecolor": "white", "linewidth": 0.8},
     )
 
-    # Render labels along radius LABEL_R, centred on each wedge
     start_deg = 0.0
     for frac, txt in zip(sizes, labels):
         if not txt:
             start_deg += frac * 360.0
             continue
-        mid = start_deg + frac * 360.0 / 2.0
+        mid   = start_deg + frac * 360.0 / 2.0
         theta = -math.radians(mid)
         ax.text(
             cfg.LABEL_R * math.cos(theta),
@@ -77,22 +77,22 @@ def draw_rotating_layer(group: str) -> bytes:
     ax.set_ylim(-1.45, 1.45)
 
     buf = io.BytesIO()
-    plt.savefig(buf, format="png", dpi=100, pad_inches=0, transparent=True)
+    # ↑ export at higher dpi for crisper edges
+    plt.savefig(buf, format="png", dpi=200, pad_inches=0, transparent=True)
     plt.close(fig)
     buf.seek(0)
     return buf.read()
 
-# ────────────────────────────────────────────────────────────────────────────
-# Static overlay (red pointer UNDER thin grey rim)
-# ────────────────────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# Static overlay (pointer, rim, centre logo)
+# ---------------------------------------------------------------------------
 
 def draw_static_overlay() -> bytes:
-    """Return transparent PNG bytes containing rim & pointer (non‑rotating)."""
     fig, ax = _fig_ax()
 
     rim_outer = cfg.WHEEL_R + cfg.RIM_OUTSET
 
-    # Pointer first (lower z‑order) so that rim overlaps its base → crisp edge
+    # Pointer (below rim)
     tip_r  = cfg.WHEEL_R - cfg.POINTER_IN
     base_r = rim_outer
     pointer = mpatches.Polygon(
@@ -103,15 +103,25 @@ def draw_static_overlay() -> bytes:
     )
     ax.add_patch(pointer)
 
-    # Thin grey rim on top
+    # Rim (above pointer)
     rim = plt.Circle((0, 0), rim_outer, fc="none", ec=cfg.EDGE_COLOR, lw=2.2, zorder=3)
     ax.add_artist(rim)
+
+    # Centre logo (highest z‑order)
+
+    img = plt.imread(cfg.LOGO_PATH)
+    ax.add_artist(
+        AnnotationBbox(
+            OffsetImage(img, zoom=cfg.LOGO_ZOOM, interpolation="lanczos"),
+            (0.012, 0), frameon=False, zorder=4,
+        )
+    )
 
     ax.set_xlim(-1.45, 1.45)
     ax.set_ylim(-1.45, 1.45)
 
     buf = io.BytesIO()
-    plt.savefig(buf, format="png", dpi=100, pad_inches=0, transparent=True)
+    plt.savefig(buf, format="png", dpi=200, pad_inches=0, transparent=True)
     plt.close(fig)
     buf.seek(0)
     return buf.read()
