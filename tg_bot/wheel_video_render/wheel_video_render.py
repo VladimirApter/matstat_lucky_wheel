@@ -1,72 +1,134 @@
 #!/usr/bin/env python3
-"""Main entry‑point for Lucky Wheel video generation — Telegram video‑note ready.
+"""Lucky Wheel video renderer – controlled winner version.
 
-Version 2.2
-* Автоматически подгоняет размер ролика к `CANVAS_PX` из конфигурации →
-  гарантировано совпадение `length` и фактического кадра.
-* Использует `moviepy.video.fx.all.resize` вместо метода `.resize()`
-  (устраняет предупреждение «Unresolved attribute reference»).
+render_segment_video(group:str, idx:int, *, mode='random', seed=None, out_file=None) -> str
+    Produce an MP4 where the red pointer lands on segment *idx*.
+    If mode == 'random' (default) – landing point is a random angle inside the wedge.
+    If mode == 'center' – pointer hits exact centre (useful for tests).
+
+When run as a script it walks over the demo group given in GROUP_DEMO and writes
+one video per student into ./videos/.
 """
 
 from __future__ import annotations
-import io, math
+import io, os, math, pathlib, random
 import numpy as np
+import time
 from PIL import Image
 from moviepy.video.VideoClip import VideoClip
 
-from wheel_draw   import draw_rotating_layer, draw_static_overlay
-from wheel_motion import angular_motion
+from wheel_segment import segment_mid, random_angle_in_segment
+from wheel_motion   import angular_motion
+from wheel_draw     import draw_rotating_layer, draw_static_overlay
+from wheel_helpers  import fetch_students
 import wheel_config as cfg
 
-# ────────────────────────────────────────────────────────────────────────────
-GROUP_NAME    = "ft-204-1"
+# ------------------------------------------------------------------------
+# RENDER CONSTANTS
 PRE_HOLD_SEC  = 0.5
 POST_HOLD_SEC = 2.0
 FPS           = 60
-SIZE_PX       = 640      # ← квадратный размер итогового кадра
-OUT_FILE      = f"{GROUP_NAME}_wheel.mp4"
-# ────────────────────────────────────────────────────────────────────────────
+SIZE_PX       = 640
+GROUP_DEMO    = "ft-204-1"
+# ---------------------------------------------------------------------------
 
-def main():
-    # PNG‑слои
-    rot_img = Image.open(io.BytesIO(draw_rotating_layer(GROUP_NAME))).convert("RGBA")
+def _extra_cw(desired_cw: float, base_final_cw: float) -> float:
+    """Extra clockwise rotation needed so the wheel stops at desired_cw."""
+    return (360.0 - desired_cw - base_final_cw) % 360.0
+
+
+def render_segment_video(
+    group: str,
+    idx: int,
+    *,
+    mode: str = "random",
+    seed: int | None = None,
+    out_file: str | None = None,
+) -> str:
+    # Robust RNG: cryptographically secure when seed is None, reproducible otherwise
+    if seed is None:
+        rng = random.SystemRandom()
+    else:
+        rng = random.Random(seed)
+
+    # Pick landing angle inside the target wedge
+    if mode == "center":
+        desired_cw = segment_mid(group, idx)
+    else:
+        desired_cw = random_angle_in_segment(group, idx, rng=rng)
+
+    # Graphics layers
+    rot_img = Image.open(io.BytesIO(draw_rotating_layer(group))).convert("RGBA")
     ovl_img = Image.open(io.BytesIO(draw_static_overlay())).convert("RGBA")
-    W, H    = rot_img.size  # может быть > CANVAS_PX из‑за dpi
+
+    W, H = rot_img.size
 
     angle_at, spin_dur = angular_motion()
-    total_dur  = PRE_HOLD_SEC + spin_dur + POST_HOLD_SEC
-    final_deg  = math.degrees(angle_at(spin_dur))
+    base_final_cw = math.degrees(angle_at(spin_dur))
+    extra_cw = _extra_cw(desired_cw, base_final_cw)
+    total_dur = PRE_HOLD_SEC + spin_dur + POST_HOLD_SEC
 
     def make_frame(t: float):
         if t < PRE_HOLD_SEC:
-            theta = 0.0
+            # Show wheel already rotated by extra_cw during the initial hold
+            theta_cw = extra_cw
         elif t < PRE_HOLD_SEC + spin_dur:
-            theta = math.degrees(angle_at(t - PRE_HOLD_SEC))
+            theta_cw = math.degrees(angle_at(t - PRE_HOLD_SEC)) + extra_cw
         else:
-            theta = final_deg
+            theta_cw = base_final_cw + extra_cw
 
+        # Compose frame (Pillow: positive angle = CCW, so clockwise is -theta)
         frame = Image.new("RGBA", (W, H), "white")
-        frame = Image.alpha_composite(frame, rot_img.rotate(theta, resample=Image.BICUBIC))
+        frame = Image.alpha_composite(frame, rot_img.rotate(-theta_cw, resample=Image.BICUBIC))
         frame = Image.alpha_composite(frame, ovl_img)
         return np.array(frame.convert("RGB"))
 
-    clip = VideoClip(make_frame, duration=total_dur)
-    # downscale/upscale to SIZE_PX using Lanczos (default) via moviepy fx
-    clip = clip.resized(new_size=(SIZE_PX, SIZE_PX))
+    clip = (
+        VideoClip(make_frame, duration=total_dur)
+        .resized(new_size=(SIZE_PX, SIZE_PX))
+    )
+
+    # -------------------------------------------------------------------
+    # Write out video
+    if out_file is None:
+        pathlib.Path("videos").mkdir(exist_ok=True)
+        out_file = os.path.join("videos", f"{group}_{idx:02d}.mp4")
 
     clip.write_videofile(
-        OUT_FILE,
+        out_file,
         fps=FPS,
         codec="libx264",
         preset="slow",
-        ffmpeg_params=["-crf", "16", "-pix_fmt", "yuv420p", "-movflags", "faststart"],
+        ffmpeg_params=["-crf", "18", "-pix_fmt", "yuv420p", "-movflags", "faststart"],
         audio=False,
     )
 
-    print(
-        f"✔ saved: size {clip.size}px, duration {total_dur:.2f}s (spin {spin_dur:.2f}s)"
-    )
+    return out_file
+
+# ---------------------------------------------------------------------------
+
+def _generate_all(
+    group: str = GROUP_DEMO,
+    *,
+    mode: str = "random",
+):
+    students = fetch_students(group)
+    for idx, student in enumerate(students):
+        safe_name = student["name"].replace(" ", "_")
+        outfile = f"videos/{group}_{idx:02d}_{safe_name}.mp4"
+        render_segment_video(
+            group,
+            idx,
+            mode=mode,
+            seed=(int(time.time())),
+            out_file=outfile,
+        )
+        print(f"✔ {outfile}")
 
 
 if __name__ == "__main__":
-    main()
+    start = time.time()
+    pathlib.Path("videos").mkdir(exist_ok=True)
+    _generate_all()
+    finish = time.time()
+    print(finish - start)
