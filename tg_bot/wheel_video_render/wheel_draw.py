@@ -3,8 +3,9 @@ import io, math
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.offsetbox import OffsetImage, AnnotationBbox
-import wheel_config as cfg
-from wheel_helpers import fetch_students, weights, hsl_color, trim_name
+
+from . import wheel_config as cfg
+from .wheel_helpers import fetch_students, weights, hsl_color, trim_name
 
 # ────────────────────────────────────────────────────────────────────────────
 # Internal helper: create figure/axes without margins (exact centre alignment)

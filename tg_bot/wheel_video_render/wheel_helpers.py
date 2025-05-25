@@ -3,7 +3,7 @@ import colorsys
 
 from services.student_data import fetch_students  # type: ignore[F401]  # re‑export
 
-import wheel_config as cfg
+from . import wheel_config as cfg
 
 __all__ = [
     "fetch_students",  # re‑exported convenience

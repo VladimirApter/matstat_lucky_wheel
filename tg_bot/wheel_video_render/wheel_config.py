@@ -21,7 +21,7 @@ MAX_OMG_MS   = 0.015  # peak angular velocity (rad / ms)
 DECEL_K      = 5      # exponential damping coefficient
 
 MAX_NAME_LEN = 14
-LOGO_PATH = "../../static/images/wheel-logo.png"
+LOGO_PATH = "../static/images/wheel-logo.png"
 
 LOGO_ZOOM = 0.11
 

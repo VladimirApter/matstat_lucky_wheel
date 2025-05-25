@@ -1,22 +1,3 @@
-#!/usr/bin/env python3
-"""student_data – centralised Google Sheets loader for MatStat Lucky Wheel.
-
-This module is the *only* place in the codebase that knows how to download,
-clean and prepare the student lists that power the wheel.  Any component that
-needs raw data should import :pyfunc:`fetch_students` instead of duplicating
-spreadsheet logic.
-
-Key points
-----------
-* Skips the first row of every sheet (headers).
-* Stops reading the moment it encounters the first blank *name* cell – the
-  sheets place a single empty row after the last student.
-* Aggregates scores across the columns listed in :pydata:`PRACTICE_COLUMNS`.
-* Names present in :pydata:`EXCLUDED` are silently skipped.
-* Results are memoised with :pyfunc:`functools.lru_cache` (one cache entry per
-  group).
-"""
-
 from __future__ import annotations
 
 from functools import lru_cache
@@ -62,15 +43,8 @@ EXCLUDED: set[str] = {
 # Zero‑based column indices that hold practice work scores
 PRACTICE_COLUMNS: list[int] = [9, 11, 13, 15, 17, 20, 24, 26, 29, 31, 33, 35]
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
 
 def _parse_numeric(val) -> float:
-    """Convert strings like ``'4,5'`` / ``'4.5'`` to *float*.
-
-    Anything that cannot be converted cleanly (including *NaN*) yields ``0.0``.
-    """
     try:
         s = str(val).strip().replace(",", ".")
         return float(s) if s and s.replace(".", "", 1).isdigit() else 0.0
@@ -78,20 +52,8 @@ def _parse_numeric(val) -> float:
         return 0.0
 
 
-# ---------------------------------------------------------------------------
-# Public API
-# ---------------------------------------------------------------------------
-
 @lru_cache(maxsize=None)
-def fetch_students(group: str) -> List[Dict[str, float]]:  # noqa: D401 – short name OK
-    """Return a list of ``{"name", "score"}`` dicts for *group*.
-
-    Parameters
-    ----------
-    group:
-        Human‑friendly group identifier (e.g. ``"ft-202-1"``).  Must exist in
-        :pydata:`GROUPS`.
-    """
+def fetch_students(group: str) -> List[Dict[str, float]]:
     if group not in GROUPS:
         raise KeyError(f"Unknown group '{group}'. Available: {list(GROUPS)}")
 

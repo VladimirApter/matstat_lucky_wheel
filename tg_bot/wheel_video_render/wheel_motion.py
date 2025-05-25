@@ -1,7 +1,7 @@
 from __future__ import annotations
 import random, math
 from typing import Callable, Tuple
-import wheel_config as cfg
+from . import wheel_config as cfg
 
 __all__ = ["angular_motion"]
 
