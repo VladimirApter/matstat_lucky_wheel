@@ -113,7 +113,7 @@ def _generate_all(
     mode: str = "random",
 ):
     students = fetch_students(group)
-    for idx, student in enumerate(students):
+    for idx, student in enumerate(students[:1]):
         safe_name = student["name"].replace(" ", "_")
         outfile = f"videos/{group}_{idx:02d}_{safe_name}.mp4"
         render_segment_video(
