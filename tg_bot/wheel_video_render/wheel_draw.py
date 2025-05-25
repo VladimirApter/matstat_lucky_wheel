@@ -1,10 +1,3 @@
-#!/usr/bin/env python3
-"""Drawing functions for Lucky Wheel – rotating layer + static overlay.
-
-* Logo rendered with high‑quality Lanczos resampling.
-* PNGs exported at **200 dpi** → центр‑лого заметно чётче.
-"""
-
 from __future__ import annotations
 import io, math
 import matplotlib.pyplot as plt

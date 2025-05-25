@@ -1,15 +1,3 @@
-#!/usr/bin/env python3
-"""Lucky Wheel video renderer – controlled winner version.
-
-render_segment_video(group:str, idx:int, *, mode='random', seed=None, out_file=None) -> str
-    Produce an MP4 where the red pointer lands on segment *idx*.
-    If mode == 'random' (default) – landing point is a random angle inside the wedge.
-    If mode == 'center' – pointer hits exact centre (useful for tests).
-
-When run as a script it walks over the demo group given in GROUP_DEMO and writes
-one video per student into ./videos/.
-"""
-
 from __future__ import annotations
 import io, os, math, pathlib, random
 import numpy as np
@@ -33,7 +21,6 @@ GROUP_DEMO    = "ft-204-1"
 # ---------------------------------------------------------------------------
 
 def _extra_cw(desired_cw: float, base_final_cw: float) -> float:
-    """Extra clockwise rotation needed so the wheel stops at desired_cw."""
     return (360.0 - desired_cw - base_final_cw) % 360.0
 
 

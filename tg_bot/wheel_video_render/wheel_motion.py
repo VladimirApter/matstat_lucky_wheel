@@ -1,27 +1,3 @@
-#!/usr/bin/env python3
-"""Angular motion profile for Lucky Wheel (accel → const → smooth cubic decel).
-
-Phases
-------
-1. **Acceleration** – quadratic ease‑in (constant angular acceleration until peak ω).
-2. **Constant speed** – uniform rotation at ω_max for a random time ≤ ``cfg.CONST_MAX_MS``.
-3. **Deceleration** – cubic ease‑out where ω(t) ∝ (1 − p)², giving a gentle settle.
-
-The helper ``angular_motion()`` builds a self‑contained motion function
-``angle_at(t)`` that returns the cumulative clockwise rotation **in radians** for
-any time `t` ≥ 0, and the total duration of the spin.
-
-Key implementation details
---------------------------
-* **Secure randomness** – we use ``random.SystemRandom`` so results ignore any
-  global ``random.seed()`` the caller might have set; each run is independent.
-* **Pre‑integration** – angular distances of the three phases are pre‑computed
-  to avoid run‑time branches inside the main integration.
-* Module is pure‑Python and deterministic once instantiated; the heavy lifting
-  is done up‑front so ``angle_at`` is extremely cheap to evaluate in render
-  loops (e.g. 60 FPS × 16 000 frames).
-"""
-
 from __future__ import annotations
 import random, math
 from typing import Callable, Tuple
@@ -29,25 +5,9 @@ import wheel_config as cfg
 
 __all__ = ["angular_motion"]
 
-# ---------------------------------------------------------------------------
-# Internal helpers
-# ---------------------------------------------------------------------------
 _secure_rand = random.SystemRandom()
 
-# ---------------------------------------------------------------------------
-# Public API
-# ---------------------------------------------------------------------------
-
 def angular_motion() -> Tuple[Callable[[float], float], float]:
-    """Return ``(angle_at, duration_s)``.
-
-    * ``angle_at(t)`` – cumulative CW rotation angle **in radians** at time `t`.
-    * ``duration_s``  – total length of the spin in seconds.
-
-    The constant‑speed phase is chosen randomly on each call using
-    ``SystemRandom`` so two successive program runs never produce identical
-    motion even if the caller sets the global random seed.
-    """
 
     # ------------------------- random phase lengths -------------------------
     const_ms = _secure_rand.uniform(0.0, cfg.CONST_MAX_MS)  # ms
