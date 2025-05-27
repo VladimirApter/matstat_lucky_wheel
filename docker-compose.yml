@@ -3,6 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    container_name: flask
     restart: unless-stopped
     ports:
       - "5000:5000"
@@ -13,6 +14,7 @@ services:
     build:
       context: .
       dockerfile: tg_bot/Dockerfile
+    container_name: bot
     restart: unless-stopped
     environment:
       - MATSTAT_LUCKY_WHEEL_BOT_TOKEN=${MATSTAT_LUCKY_WHEEL_BOT_TOKEN}
@@ -24,6 +26,7 @@ services:
   nginx:
     image: nginx:latest
     restart: unless-stopped
+    container_name: nginx
     ports:
       - "80:80"
       - "443:443"
