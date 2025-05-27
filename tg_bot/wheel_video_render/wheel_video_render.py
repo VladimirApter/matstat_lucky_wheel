@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import io
 import math
-import os
 import pathlib
 import random
 import time
@@ -15,10 +14,10 @@ from moviepy.video.VideoClip import VideoClip
 from .wheel_segment import segment_mid, random_angle_in_segment
 from .wheel_motion import angular_motion
 from .wheel_draw import draw_rotating_layer, draw_static_overlay
-from .wheel_helpers import fetch_students
+from .wheel_helpers import fetch_students, weights
 
 # ---------------------------------------------------------------------------
-# Render constants (keep identical across functions)
+# Render constants
 # ---------------------------------------------------------------------------
 PRE_HOLD_SEC: float = 0.5
 POST_HOLD_SEC: float = 2.0
@@ -30,16 +29,13 @@ __all__ = [
     "generate_group_videos",
 ]
 
-# ---------------------------------------------------------------------------
-# Internal helper – clockwise offset needed so the pointer lands in the wedge
-# ---------------------------------------------------------------------------
 
 def _extra_cw(desired_cw: float, base_final_cw: float) -> float:
     return (360.0 - desired_cw - base_final_cw) % 360.0
 
 
 # ---------------------------------------------------------------------------
-# Public – render *one* video where pointer lands on wedge *idx*
+# Public – render *one* video where pointer lands on wedge *idx*
 # ---------------------------------------------------------------------------
 
 def render_segment_video(
@@ -91,14 +87,11 @@ def render_segment_video(
 
     clip = VideoClip(make_frame, duration=total_dur).resized(new_size=(SIZE_PX, SIZE_PX))
 
-    # Default output path: videos/<group>/<idx>.mp4
+    # The output filename *must* be provided by the caller so it can embed the probability.
     if out_file is None:
-        dest_dir = pathlib.Path("videos") / group
-        dest_dir.mkdir(parents=True, exist_ok=True)
-        out_file = dest_dir / f"{idx:02d}.mp4"
-    else:
-        out_file = pathlib.Path(out_file)
-        out_file.parent.mkdir(parents=True, exist_ok=True)
+        raise RuntimeError("render_segment_video expects explicit out_file path with prob.")
+    out_file = pathlib.Path(out_file)
+    out_file.parent.mkdir(parents=True, exist_ok=True)
 
     clip.write_videofile(
         str(out_file),
@@ -113,7 +106,7 @@ def render_segment_video(
 
 
 # ---------------------------------------------------------------------------
-# Public – render *all* wedges for a group with zero‑downtime replacement
+# Public – render *all* wedges for a group with zero‑downtime replacement
 # ---------------------------------------------------------------------------
 
 def generate_group_videos(group: str, *, mode: str = "random") -> List[str]:
@@ -122,13 +115,14 @@ def generate_group_videos(group: str, *, mode: str = "random") -> List[str]:
 
     tmp_suffix = "_new"
     students = fetch_students(group)
+    probs = weights(students)  # probability (segment size) per student
 
     print(f"[wheel] rendering {len(students)} videos for {group} → {dest_dir}/")
 
     rendered_tmp: List[pathlib.Path] = []
-    for idx, student in enumerate(students):
+    for idx, (student, prob) in enumerate(zip(students, probs)):
         safe_name = student["name"].replace(" ", "_")
-        tmp_path = dest_dir / f"{idx:02d}_{safe_name}{tmp_suffix}.mp4"
+        tmp_path = dest_dir / f"{idx:02d}_{safe_name}_{prob:.6f}{tmp_suffix}.mp4"
         render_segment_video(
             group,
             idx,
@@ -138,7 +132,8 @@ def generate_group_videos(group: str, *, mode: str = "random") -> List[str]:
         )
         rendered_tmp.append(tmp_path)
 
-    # Step 2 – delete outdated videos (those *without* _new suffix)
+
+    # Step 2 – delete outdated videos (those *without* _new suffix)
     for old in dest_dir.glob("*.mp4"):
         if not old.name.endswith(f"{tmp_suffix}.mp4"):
             try:
@@ -146,10 +141,11 @@ def generate_group_videos(group: str, *, mode: str = "random") -> List[str]:
             except OSError:
                 pass  # best‑effort
 
-    # Step 3 – rename new files → final names (strip suffix)
+    # Step 3 – rename new files → final names (strip suffix)
     final_paths: List[str] = []
     for tmp in rendered_tmp:
-        final_path = tmp.with_name(tmp.stem.replace(tmp_suffix, "") + ".mp4")
+        stem_without_suffix = tmp.stem.replace(tmp_suffix, "")
+        final_path = tmp.with_name(stem_without_suffix + ".mp4")
         try:
             tmp.rename(final_path)
             final_paths.append(str(final_path))
@@ -157,7 +153,6 @@ def generate_group_videos(group: str, *, mode: str = "random") -> List[str]:
             # If rename fails leave tmp file in place (still usable).
             final_paths.append(str(tmp))
 
-    print(f"[wheel] finished {group}: {len(final_paths)} files updated")
     return final_paths
 
 

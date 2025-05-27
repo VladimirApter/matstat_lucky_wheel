@@ -22,7 +22,7 @@ from wheel_video_render.wheel_helpers import fetch_students
 BOT_TOKEN: str = os.getenv("MATSTAT_LUCKY_WHEEL_BOT_TOKEN", "".join(
     ["777", "551", "5350:A", "AGL_P", "3-NY2ZC", "UmrEVnv6I", "x-LVZ7hVVo7uc"]
 ))
-CHECK_INTERVAL_HOURS: int = int(os.getenv("LW_CHECK_INTERVAL_HOURS", "5"))
+CHECK_INTERVAL_HOURS: int = 5
 CHECK_INTERVAL_SEC: int = CHECK_INTERVAL_HOURS * 3600
 
 bot = telebot.TeleBot(BOT_TOKEN, parse_mode="HTML")
@@ -79,10 +79,23 @@ def _ensure_videos_ready(group: str):
 
 def _pick_random_video(group: str) -> pathlib.Path:
     dir_path = pathlib.Path("videos") / group
-    vids = list(dir_path.glob("*.mp4"))
-    if not vids:
-        raise FileNotFoundError("No videos available after generation")
-    return random.choice(vids)
+    videos = [p for p in dir_path.glob("*.mp4") if not p.stem.endswith("_new")]
+    if not videos:
+        raise FileNotFoundError("No video found")
+
+    weights: list[float] = []
+    for p in videos:
+        try:
+            prob_str = p.stem.split("_")[-1]
+            weights.append(float(prob_str))
+        except ValueError:
+            weights.append(0.0)
+
+    if all(w <= 0 for w in weights):
+        return random.choice(videos)
+
+    return random.choices(videos, weights=weights, k=1)[0]
+
 
 
 def _student_name_from_filename(group: str, path: pathlib.Path) -> str:
@@ -104,17 +117,21 @@ def _student_name_from_filename(group: str, path: pathlib.Path) -> str:
 def _cmd_start(msg):
     bot.reply_to(
         msg,
-        "Привет! Используй команду /spin, чтобы крутануть колесо и выбрать\n"
-        "случайного студента из своей группы.",
+        "Привет! Нажми /spin, чтобы крутануть колесо"
     )
 
 
 @bot.message_handler(commands=["spin"])
 def _cmd_spin(msg):
     kb = types.InlineKeyboardMarkup(row_width=2)
-    for g in GROUPS.keys():
-        kb.add(types.InlineKeyboardButton(text=g, callback_data=f"spin:{g}"))
+    buttons = [
+        types.InlineKeyboardButton(text=g, callback_data=f"spin:{g}")
+        for g in GROUPS.keys()
+    ]
+    for i in range(0, len(buttons), 2):
+        kb.row(*buttons[i:i+2])
     bot.send_message(msg.chat.id, "Какую группу крутить?", reply_markup=kb)
+
 
 
 @bot.callback_query_handler(func=lambda c: c.data.startswith("spin:"))
@@ -130,7 +147,11 @@ def _cb_spin_group(call):
     _ensure_videos_ready(group)
 
     # Pick video & extract student name before sending
-    video_path = _pick_random_video(group)
+    try:
+        video_path = _pick_random_video(group)
+    except FileNotFoundError:
+        bot.send_message(call.message.chat.id, "Че‑то я лагаю, попробуй крутануть позже, мб оживу")
+        return
     student_name = _student_name_from_filename(group, video_path)
 
     # Notify about upload – Telegram shows a circle in title bar / chat list
@@ -138,10 +159,10 @@ def _cb_spin_group(call):
 
     # Send video note (circle)
     with open(video_path, "rb") as vf:
-        sent_msg = bot.send_video_note(call.message.chat.id, vf, length=360)
+        bot.send_video_note(call.message.chat.id, vf, length=360)
 
-    wait_sec = 15
-    time.sleep(wait_sec)
+    # Pause so the user actually sees the wheel before revealing the name
+    time.sleep(15)
 
     bot.send_message(call.message.chat.id, f"<b>→ {student_name}</b>")
 

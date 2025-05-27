@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from functools import lru_cache
 from typing import List, Dict
 
 import pandas as pd
@@ -41,7 +40,7 @@ EXCLUDED: set[str] = {
 }
 
 # Zero‑based column indices that hold practice work scores
-PRACTICE_COLUMNS: list[int] = [9, 11, 13, 15, 17, 20, 24, 26, 29, 31, 33, 35]
+PRACTICE_COLUMNS: list[int] = [9, 11, 13, 15, 17, 20, 22, 24, 26, 29, 31, 33, 35]
 
 
 def _parse_numeric(val) -> float:
@@ -52,7 +51,6 @@ def _parse_numeric(val) -> float:
         return 0.0
 
 
-@lru_cache(maxsize=None)
 def fetch_students(group: str) -> List[Dict[str, float]]:
     if group not in GROUPS:
         raise KeyError(f"Unknown group '{group}'. Available: {list(GROUPS)}")
@@ -77,8 +75,10 @@ def fetch_students(group: str) -> List[Dict[str, float]]:
         row = df.iloc[idx]
         score = sum(_parse_numeric(row.iloc[col]) for col in PRACTICE_COLUMNS)
 
-        if score > 0:  # Ignore students without a single completed practice
-            students.append({"name": name, "score": round(score, 2)})
+        if score == 0:
+            score += 0.25   # чтобы сегмент этого студента не занимал все колесо
+
+        students.append({"name": name, "score": round(score, 2)})
 
     return students
 
