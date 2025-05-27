@@ -3,3 +3,4 @@ moviepy==2.1.2
 numpy==1.25.0
 Pillow==10.2.0
 pyTelegramBotAPI==4.27.0
+pandas==2.2.3
