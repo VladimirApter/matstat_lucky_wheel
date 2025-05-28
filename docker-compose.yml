@@ -20,6 +20,9 @@ services:
       - MATSTAT_LUCKY_WHEEL_BOT_TOKEN=${MATSTAT_LUCKY_WHEEL_BOT_TOKEN}
     depends_on:
       - flask
+    volumes:
+      - ./videos:/app/videos
+      - ./services:/app/services
     networks:
       - app-network
 
